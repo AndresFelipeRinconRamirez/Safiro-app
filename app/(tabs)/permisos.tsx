@@ -13,15 +13,15 @@ export default function PermisosScreen() {
   };
 
   const handleSolicitudPermiso = () => {
-    console.log('Navegar a solicitud de permiso');
+    router.push('/solicitudes-permiso' as any);
   };
 
   const handleHistorialPermiso = () => {
-    console.log('Navegar a historial de permiso');
+    router.push('/historial-permiso' as any);
   };
 
   const handleNuevoPermiso = () => {
-    console.log('Navegar a nuevo permiso');
+    router.push('/solicitar-permiso' as any);
   };
 
   return (
