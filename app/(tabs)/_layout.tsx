@@ -1,8 +1,6 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Platform, Text } from 'react-native';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -14,20 +12,53 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Inicio',
+          tabBarIcon: ({ color }) =>
+            Platform.OS === 'ios' ? (
+              <Text style={{ fontSize: 28, color }}>🏠</Text>
+            ) : (
+              <Text style={{ fontSize: 24, color }}>🏠</Text>
+            ),
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="profile"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          href: null, // Ocultar de la barra de navegación
+        }}
+      />
+      <Tabs.Screen
+        name="permisos"
+        options={{
+          href: null, // Ocultar de la barra de navegación
+        }}
+      />
+      <Tabs.Screen
+        name="clases"
+        options={{
+          href: null, // Ocultar de la barra de navegación
+        }}
+      />
+      <Tabs.Screen
+        name="ayuda"
+        options={{
+          href: null, // Ocultar de la barra de navegación
+        }}
+      />
+      <Tabs.Screen
+        name="perfil-detalle"
+        options={{
+          href: null, // Ocultar de la barra de navegación
+        }}
+      />
+      <Tabs.Screen
+        name="ajustes"
+        options={{
+          href: null, // Ocultar de la barra de navegación
         }}
       />
     </Tabs>
