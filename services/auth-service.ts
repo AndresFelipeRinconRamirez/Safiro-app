@@ -34,20 +34,42 @@ export interface RegistroUsuarioRequest {
 }
 
 /**
+ * DTO para tipo de perfil
+ */
+export interface TipoPerfilDTO {
+  idTipoPerfil: number;
+  nombre: string;
+  descripcion: string;
+  esSistema: boolean;
+  activo: boolean;
+  fechaCreacion: string;
+  fechaActualizacion: string;
+}
+
+/**
  * DTO para respuesta de usuario (response)
  * Basado en UsuarioResponse del API
  */
 export interface UsuarioResponse {
   idUsuario: number;
-  nombre: string;
   email: string;
-  telefono: string;
-  emailVerificado: boolean;
+  primerNombre: string;
+  segundoNombre?: string;
+  primerApellido: string;
+  segundoApellido?: string;
+  tipoPerfil: TipoPerfilDTO;
+  fechaNacimiento: string;
+  telefono?: string;
+  fotoPerfil?: string;
+  biografia?: string;
+  pais?: string;
+  ciudad?: string;
   activo: boolean;
-  idTipoPerfil: number;
-  nombreTipoPerfil: string;
+  verificado: boolean;
+  fechaRegistro: string;
+  fechaUltimoAcceso?: string;
   fechaCreacion: string;
-  fechaActualizacion: string;
+  fechaActualizacion?: string;
 }
 
 /**
@@ -110,7 +132,7 @@ const authService = {
         throw new Error('Usuario inactivo');
       }
 
-      if (!usuario.emailVerificado) {
+      if (!usuario.verificado) {
         throw new Error('Email no verificado');
       }
 

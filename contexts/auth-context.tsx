@@ -50,15 +50,25 @@ function mapearRol(idTipoPerfil: number): UserRole {
  * Convertir UsuarioResponse del API a User de la app
  */
 function convertirUsuarioResponse(usuarioResponse: UsuarioResponse): User {
+  // Concatenar nombre completo
+  const nombreCompleto = [
+    usuarioResponse.primerNombre,
+    usuarioResponse.segundoNombre,
+    usuarioResponse.primerApellido,
+    usuarioResponse.segundoApellido,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return {
     id: usuarioResponse.idUsuario,
-    name: usuarioResponse.nombre,
+    name: nombreCompleto,
     email: usuarioResponse.email,
-    telefono: usuarioResponse.telefono,
-    emailVerificado: usuarioResponse.emailVerificado,
+    telefono: usuarioResponse.telefono || '',
+    emailVerificado: usuarioResponse.verificado,
     activo: usuarioResponse.activo,
-    idTipoPerfil: usuarioResponse.idTipoPerfil,
-    role: mapearRol(usuarioResponse.idTipoPerfil),
+    idTipoPerfil: usuarioResponse.tipoPerfil.idTipoPerfil,
+    role: mapearRol(usuarioResponse.tipoPerfil.idTipoPerfil),
   };
 }
 
