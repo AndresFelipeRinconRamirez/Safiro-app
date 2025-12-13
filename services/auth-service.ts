@@ -7,11 +7,12 @@ import api from './api';
 
 /**
  * Tipos de perfil según el API de Safiro
+ * IMPORTANTE: Los IDs deben coincidir exactamente con la base de datos
  */
 export enum TipoPerfil {
-  ESTUDIANTE = 1,
-  PROFESOR = 2,
-  ADMINISTRADOR = 3,
+  PROFESOR = 1,
+  ASISTENTE = 2,
+  ESTUDIANTE = 3,
 }
 
 /**

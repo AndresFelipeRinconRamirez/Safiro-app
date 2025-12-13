@@ -3,7 +3,9 @@
     "allow": [
       "Bash(tree:*)",
       "Bash(git reset:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nSincronizar tipos de perfil con IDs del backend\n\nSe corrigieron los IDs de tipos de perfil para que coincidan exactamente con la base de datos del backend:\n\nAntes:\n- ESTUDIANTE = 1\n- PROFESOR = 2\n- ADMINISTRADOR = 3\n\nAhora (correcto según BD):\n- PROFESOR = 1\n- ASISTENTE = 2\n- ESTUDIANTE = 3\n\nCambios adicionales:\n- Actualizado mapearRol() para reflejar IDs correctos\n- Cambiado ''administrador'' por ''asistente'' en tipos\n- Agregado campo nombreTipoPerfil al User interface\n- Actualizada conversión para incluir nombre del tipo de perfil\n\nEsto asegura compatibilidad total con el backend de Safiro.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")"
     ]
   }
 }

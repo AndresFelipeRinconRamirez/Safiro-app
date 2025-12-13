@@ -5,7 +5,7 @@ import authService, {
   RegistroUsuarioRequest,
 } from '@/services/auth-service';
 
-export type UserRole = 'estudiante' | 'profesor' | 'administrador';
+export type UserRole = 'estudiante' | 'profesor' | 'asistente';
 
 export interface User {
   id: number;
@@ -16,6 +16,7 @@ export interface User {
   emailVerificado: boolean;
   activo: boolean;
   idTipoPerfil: number;
+  nombreTipoPerfil: string;
   avatar?: string;
 }
 
@@ -32,15 +33,16 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 /**
  * Mapear rol de tipo perfil a nombre de rol
+ * IMPORTANTE: IDs según la base de datos del backend
  */
 function mapearRol(idTipoPerfil: number): UserRole {
   switch (idTipoPerfil) {
     case 1:
-      return 'estudiante';
-    case 2:
       return 'profesor';
+    case 2:
+      return 'asistente';
     case 3:
-      return 'administrador';
+      return 'estudiante';
     default:
       return 'estudiante';
   }
@@ -68,6 +70,7 @@ function convertirUsuarioResponse(usuarioResponse: UsuarioResponse): User {
     emailVerificado: usuarioResponse.verificado,
     activo: usuarioResponse.activo,
     idTipoPerfil: usuarioResponse.tipoPerfil.idTipoPerfil,
+    nombreTipoPerfil: usuarioResponse.tipoPerfil.nombre,
     role: mapearRol(usuarioResponse.tipoPerfil.idTipoPerfil),
   };
 }
