@@ -19,11 +19,18 @@ export enum TipoPerfil {
  * Basado en UsuarioRegistroRequest del API
  */
 export interface RegistroUsuarioRequest {
-  nombre: string;
   email: string;
-  telefono: string;
   password: string;
+  primerNombre: string;
+  primerApellido: string;
+  fechaNacimiento: string; // Formato: YYYY-MM-DD
   idTipoPerfil: TipoPerfil;
+  segundoNombre?: string;
+  segundoApellido?: string;
+  telefono?: string;
+  biografia?: string;
+  pais?: string;
+  ciudad?: string;
 }
 
 /**

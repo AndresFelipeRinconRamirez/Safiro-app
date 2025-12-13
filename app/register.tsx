@@ -21,15 +21,19 @@ export default function RegisterScreen() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
+  const [primerNombre, setPrimerNombre] = useState('');
+  const [segundoNombre, setSegundoNombre] = useState('');
+  const [primerApellido, setPrimerApellido] = useState('');
+  const [segundoApellido, setSegundoApellido] = useState('');
+  const [fechaNacimiento, setFechaNacimiento] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { register } = useAuth();
 
   const handleRegister = async () => {
-    // Validaciones
-    if (!name || !email || !phone || !password || !confirmPassword) {
-      Alert.alert('Error', 'Por favor completa todos los campos');
+    // Validaciones de campos requeridos
+    if (!primerNombre || !primerApellido || !email || !fechaNacimiento || !password || !confirmPassword) {
+      Alert.alert('Error', 'Por favor completa todos los campos obligatorios');
       return;
     }
 
@@ -38,8 +42,8 @@ export default function RegisterScreen() {
       return;
     }
 
-    if (password.length < 6) {
-      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+    if (password.length < 8) {
+      Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres');
       return;
     }
 
@@ -50,14 +54,25 @@ export default function RegisterScreen() {
       return;
     }
 
+    // Validar fecha de nacimiento
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(fechaNacimiento)) {
+      Alert.alert('Error', 'Formato de fecha inválido. Usa AAAA-MM-DD (ej: 2000-05-15)');
+      return;
+    }
+
     setLoading(true);
     try {
       await register({
-        nombre: name,
-        email: email,
-        telefono: phone,
-        password: password,
-        idTipoPerfil: TipoPerfil.ESTUDIANTE, // Por defecto registrar como estudiante
+        primerNombre,
+        primerApellido,
+        segundoNombre: segundoNombre || undefined,
+        segundoApellido: segundoApellido || undefined,
+        email,
+        telefono: phone || undefined,
+        fechaNacimiento,
+        password,
+        idTipoPerfil: TipoPerfil.ESTUDIANTE,
       });
 
       // Navegar a la pantalla de registro exitoso
@@ -118,21 +133,50 @@ export default function RegisterScreen() {
 
           {/* Formulario */}
           <View style={styles.formContainer}>
-            {/* Campo de nombre */}
+            {/* Campo de primer nombre */}
             <TextInput
               style={styles.input}
-              placeholder="Nombre completo"
+              placeholder="Primer nombre *"
               placeholderTextColor="#7FA9B8"
-              value={name}
-              onChangeText={setName}
+              value={primerNombre}
+              onChangeText={setPrimerNombre}
               autoCapitalize="words"
-              autoComplete="name"
+            />
+
+            {/* Campo de segundo nombre */}
+            <TextInput
+              style={styles.input}
+              placeholder="Segundo nombre (opcional)"
+              placeholderTextColor="#7FA9B8"
+              value={segundoNombre}
+              onChangeText={setSegundoNombre}
+              autoCapitalize="words"
+            />
+
+            {/* Campo de primer apellido */}
+            <TextInput
+              style={styles.input}
+              placeholder="Primer apellido *"
+              placeholderTextColor="#7FA9B8"
+              value={primerApellido}
+              onChangeText={setPrimerApellido}
+              autoCapitalize="words"
+            />
+
+            {/* Campo de segundo apellido */}
+            <TextInput
+              style={styles.input}
+              placeholder="Segundo apellido (opcional)"
+              placeholderTextColor="#7FA9B8"
+              value={segundoApellido}
+              onChangeText={setSegundoApellido}
+              autoCapitalize="words"
             />
 
             {/* Campo de correo */}
             <TextInput
               style={styles.input}
-              placeholder="Correo"
+              placeholder="Correo electrónico *"
               placeholderTextColor="#7FA9B8"
               value={email}
               onChangeText={setEmail}
@@ -141,10 +185,20 @@ export default function RegisterScreen() {
               autoComplete="email"
             />
 
+            {/* Campo de fecha de nacimiento */}
+            <TextInput
+              style={styles.input}
+              placeholder="Fecha de nacimiento (AAAA-MM-DD) *"
+              placeholderTextColor="#7FA9B8"
+              value={fechaNacimiento}
+              onChangeText={setFechaNacimiento}
+              keyboardType="numbers-and-punctuation"
+            />
+
             {/* Campo de numero de celular */}
             <TextInput
               style={styles.input}
-              placeholder="Numero telefonico"
+              placeholder="Número telefónico (opcional)"
               placeholderTextColor="#7FA9B8"
               value={phone}
               onChangeText={setPhone}
