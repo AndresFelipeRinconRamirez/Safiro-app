@@ -1,26 +1,62 @@
-import { StyleSheet, View, TouchableOpacity, ScrollView, ImageBackground } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, ScrollView, ImageBackground, ActivityIndicator, Alert } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-
-// Datos mock de clases asignadas al profesor
-const CLASES_ASIGNADAS = [
-  { id: 1, nombre: 'Ecuaciones diferenciales' },
-  { id: 2, nombre: 'Ecuaciones integrales' },
-  { id: 3, nombre: 'Algebra Lineal' },
-];
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/auth-context';
+import materiasService, { MateriaResponse } from '@/services/materias-service';
 
 export default function ClasesScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+  const [clases, setClases] = useState<MateriaResponse[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Cargar clases del profesor cuando el componente se monta
+  useEffect(() => {
+    if (user) {
+      cargarClases();
+    }
+  }, [user]);
+
+  const cargarClases = async () => {
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      const clasesObtenidas = await materiasService.obtenerMateriasPorUsuario(user.id);
+      setClases(clasesObtenidas);
+    } catch (error: any) {
+      console.error('Error al cargar clases:', error);
+
+      let errorMessage = 'No se pudieron cargar las clases';
+
+      if (error.response) {
+        if (error.response.status === 404) {
+          // Profesor no tiene clases asignadas
+          setClases([]);
+          return;
+        } else if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+      } else if (error.request) {
+        errorMessage = 'No se pudo conectar con el servidor. Verifica tu conexión.';
+      }
+
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleBack = () => {
     router.back();
   };
 
-  const handleClasePress = (clase: typeof CLASES_ASIGNADAS[0]) => {
+  const handleClasePress = (clase: MateriaResponse) => {
     // Navegar al detalle de la clase
-    router.push(`/clase/${clase.id}` as any);
+    router.push(`/clase/${clase.idMateria}` as any);
   };
 
   const handleEditarClases = () => {
@@ -49,16 +85,29 @@ export default function ClasesScreen() {
       {/* Contenido */}
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.clasesContainer}>
-          {CLASES_ASIGNADAS.map((clase) => (
-            <TouchableOpacity
-              key={clase.id}
-              style={styles.claseCard}
-              onPress={() => handleClasePress(clase)}
-              activeOpacity={0.7}
-            >
-              <ThemedText style={styles.claseText}>{clase.nombre}</ThemedText>
-            </TouchableOpacity>
-          ))}
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#2B7A94" />
+              <ThemedText style={styles.loadingText}>Cargando clases...</ThemedText>
+            </View>
+          ) : clases.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <ThemedText style={styles.emptyText}>
+                No tienes clases asignadas
+              </ThemedText>
+            </View>
+          ) : (
+            clases.map((clase) => (
+              <TouchableOpacity
+                key={clase.idMateria}
+                style={styles.claseCard}
+                onPress={() => handleClasePress(clase)}
+                activeOpacity={0.7}
+              >
+                <ThemedText style={styles.claseText}>{clase.nombreMateria}</ThemedText>
+              </TouchableOpacity>
+            ))
+          )}
         </View>
       </ScrollView>
 
@@ -169,5 +218,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#2D3748',
     flex: 1,
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#718096',
+  },
+  emptyContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#718096',
+    textAlign: 'center',
   },
 });

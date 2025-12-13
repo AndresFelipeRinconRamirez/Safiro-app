@@ -1,18 +1,11 @@
-import { StyleSheet, View, TouchableOpacity, ScrollView, ImageBackground } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, ScrollView, ImageBackground, ActivityIndicator, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/contexts/auth-context';
 import { useRouter } from 'expo-router';
-
-// Datos mock de materias para estudiantes
-const MATERIAS_ESTUDIANTE = [
-  { id: 1, nombre: 'Ecuaciones Diferenciales' },
-  { id: 2, nombre: 'Catedra' },
-  { id: 3, nombre: 'Programación avanzada' },
-  { id: 4, nombre: 'Ingles I' },
-  { id: 5, nombre: 'Emprendimiento' },
-];
+import { useState, useEffect } from 'react';
+import materiasService, { MateriaResponse } from '@/services/materias-service';
 
 // Datos mock de secciones para profesores
 const SECCIONES_PROFESOR = [
@@ -33,15 +26,54 @@ const SECCIONES_PROFESOR = [
 export default function HomeScreen() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const [materias, setMaterias] = useState<MateriaResponse[]>([]);
+  const [loadingMaterias, setLoadingMaterias] = useState(false);
+
+  // Cargar materias del usuario cuando el componente se monta
+  useEffect(() => {
+    if (user && user.role === 'estudiante') {
+      cargarMaterias();
+    }
+  }, [user]);
+
+  const cargarMaterias = async () => {
+    if (!user) return;
+
+    setLoadingMaterias(true);
+    try {
+      const materiasObtenidas = await materiasService.obtenerMateriasPorUsuario(user.id);
+      setMaterias(materiasObtenidas);
+    } catch (error: any) {
+      console.error('Error al cargar materias:', error);
+
+      let errorMessage = 'No se pudieron cargar las materias';
+
+      if (error.response) {
+        if (error.response.status === 404) {
+          // Usuario no tiene materias asignadas
+          setMaterias([]);
+          return;
+        } else if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+      } else if (error.request) {
+        errorMessage = 'No se pudo conectar con el servidor. Verifica tu conexión.';
+      }
+
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setLoadingMaterias(false);
+    }
+  };
 
   const handleLogout = () => {
     logout();
     router.replace('/login');
   };
 
-  const handleMateriaPress = (materia: typeof MATERIAS_ESTUDIANTE[0]) => {
+  const handleMateriaPress = (materia: MateriaResponse) => {
     // Navegar a la pantalla de la materia
-    router.push(`/materia/${materia.id}` as any);
+    router.push(`/materia/${materia.idMateria}` as any);
   };
 
   const handleHelpPress = () => {
@@ -94,16 +126,31 @@ export default function HomeScreen() {
           {user?.role === 'estudiante' ? (
             // Vista para estudiantes - Materias
             <>
-              {MATERIAS_ESTUDIANTE.map((materia) => (
-                <TouchableOpacity
-                  key={materia.id}
-                  style={styles.materiaCard}
-                  onPress={() => handleMateriaPress(materia)}
-                  activeOpacity={0.7}
-                >
-                  <ThemedText style={styles.materiaText}>{materia.nombre}</ThemedText>
-                </TouchableOpacity>
-              ))}
+              {loadingMaterias ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color="#2B7A94" />
+                  <ThemedText style={styles.loadingText}>Cargando materias...</ThemedText>
+                </View>
+              ) : materias.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                  <ThemedText style={styles.emptyText}>
+                    No tienes materias asignadas
+                  </ThemedText>
+                </View>
+              ) : (
+                materias.map((materia) => (
+                  <TouchableOpacity
+                    key={materia.idMateria}
+                    style={styles.materiaCard}
+                    onPress={() => handleMateriaPress(materia)}
+                    activeOpacity={0.7}
+                  >
+                    <ThemedText style={styles.materiaText}>
+                      {materia.nombreMateria}
+                    </ThemedText>
+                  </TouchableOpacity>
+                ))
+              )}
             </>
           ) : (
             // Vista para profesores - Secciones con imágenes
@@ -293,5 +340,25 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#718096',
+  },
+  emptyContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#718096',
+    textAlign: 'center',
   },
 });
