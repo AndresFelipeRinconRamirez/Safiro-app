@@ -3,6 +3,8 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -11,6 +13,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useAuth } from '@/contexts/auth-context';
+import { TipoPerfil } from '@/services/auth-service';
 
 export default function RegisterScreen() {
   const [email, setEmail] = useState('');
@@ -18,11 +22,71 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { register } = useAuth();
 
-  const handleRegister = () => {
-    // Navegar a la pantalla de registro exitoso
-    router.push('/registro-exitoso' as any);
+  const handleRegister = async () => {
+    // Validaciones
+    if (!name || !email || !phone || !password || !confirmPassword) {
+      Alert.alert('Error', 'Por favor completa todos los campos');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Las contraseñas no coinciden');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Error', 'Por favor ingresa un correo electrónico válido');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await register({
+        nombre: name,
+        email: email,
+        telefono: phone,
+        password: password,
+        idTipoPerfil: TipoPerfil.ESTUDIANTE, // Por defecto registrar como estudiante
+      });
+
+      // Navegar a la pantalla de registro exitoso
+      router.push('/registro-exitoso' as any);
+    } catch (error: any) {
+      console.error('Error en registro:', error);
+
+      let errorMessage = 'Ocurrió un error al registrarse';
+
+      if (error.response) {
+        if (error.response.status === 409) {
+          errorMessage = 'Este correo electrónico ya está registrado';
+        } else if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data?.errors) {
+          // Manejar errores de validación del backend
+          const errors = error.response.data.errors;
+          errorMessage = Object.values(errors).flat().join('\n');
+        }
+      } else if (error.request) {
+        errorMessage = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      Alert.alert('Error de registro', errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBackToLogin = () => {
@@ -114,12 +178,17 @@ export default function RegisterScreen() {
 
             {/* Botón de registro */}
             <TouchableOpacity
-              style={styles.registerButton}
+              style={[styles.registerButton, loading && styles.registerButtonDisabled]}
               onPress={handleRegister}
+              disabled={loading}
             >
-              <ThemedText style={styles.registerButtonText}>
-                Registrarse
-              </ThemedText>
+              {loading ? (
+                <ActivityIndicator color="#2B7A94" />
+              ) : (
+                <ThemedText style={styles.registerButtonText}>
+                  Registrarse
+                </ThemedText>
+              )}
             </TouchableOpacity>
 
             {/* Enlace de volver a login */}
@@ -195,6 +264,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
     marginBottom: 24,
+  },
+  registerButtonDisabled: {
+    opacity: 0.6,
   },
   registerButtonText: {
     fontSize: 16,

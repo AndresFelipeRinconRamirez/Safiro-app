@@ -1,56 +1,98 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import authService, {
+  UsuarioResponse,
+  LoginCredentials,
+  RegistroUsuarioRequest,
+} from '@/services/auth-service';
 
-export type UserRole = 'estudiante' | 'profesor';
+export type UserRole = 'estudiante' | 'profesor' | 'administrador';
 
 export interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
   role: UserRole;
+  telefono: string;
+  emailVerificado: boolean;
+  activo: boolean;
+  idTipoPerfil: number;
   avatar?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  register: (datos: RegistroUsuarioRequest) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Usuarios mock para pruebas
-const MOCK_USERS: User[] = [
-  {
-    id: '1',
-    name: 'Estudiante Demo',
-    email: 'estudiante@safiro.com',
-    role: 'estudiante',
-  },
-  {
-    id: '2',
-    name: 'Profesor Demo',
-    email: 'profesor@safiro.com',
-    role: 'profesor',
-  },
-];
+/**
+ * Mapear rol de tipo perfil a nombre de rol
+ */
+function mapearRol(idTipoPerfil: number): UserRole {
+  switch (idTipoPerfil) {
+    case 1:
+      return 'estudiante';
+    case 2:
+      return 'profesor';
+    case 3:
+      return 'administrador';
+    default:
+      return 'estudiante';
+  }
+}
+
+/**
+ * Convertir UsuarioResponse del API a User de la app
+ */
+function convertirUsuarioResponse(usuarioResponse: UsuarioResponse): User {
+  return {
+    id: usuarioResponse.idUsuario,
+    name: usuarioResponse.nombre,
+    email: usuarioResponse.email,
+    telefono: usuarioResponse.telefono,
+    emailVerificado: usuarioResponse.emailVerificado,
+    activo: usuarioResponse.activo,
+    idTipoPerfil: usuarioResponse.idTipoPerfil,
+    role: mapearRol(usuarioResponse.idTipoPerfil),
+  };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Simular delay de red
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // Buscar usuario mock
-    const foundUser = MOCK_USERS.find((u) => u.email === email);
-
-    if (foundUser && password === 'demo123') {
-      setUser(foundUser);
-      return true;
+  const login = async (email: string, password: string): Promise<void> => {
+    setLoading(true);
+    try {
+      const credentials: LoginCredentials = { email, password };
+      const usuarioResponse = await authService.login(credentials);
+      const usuario = convertirUsuarioResponse(usuarioResponse);
+      setUser(usuario);
+    } catch (error) {
+      console.error('Error en login:', error);
+      throw error;
+    } finally {
+      setLoading(false);
     }
+  };
 
-    return false;
+  const register = async (datos: RegistroUsuarioRequest): Promise<void> => {
+    setLoading(true);
+    try {
+      const usuarioResponse = await authService.registrar(datos);
+      const usuario = convertirUsuarioResponse(usuarioResponse);
+      setUser(usuario);
+    } catch (error) {
+      console.error('Error en registro:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logout = () => {
@@ -62,7 +104,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         isAuthenticated: !!user,
+        loading,
         login,
+        register,
         logout,
       }}
     >

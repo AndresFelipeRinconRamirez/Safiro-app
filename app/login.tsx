@@ -30,19 +30,31 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      const success = await login(email, password);
+      await login(email, password);
+      // Navegar a la pantalla principal
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      console.error('Error en login:', error);
 
-      if (success) {
-        // Navegar a la pantalla principal
-        router.replace('/(tabs)');
-      } else {
-        Alert.alert(
-          'Error de autenticación',
-          'Credenciales incorrectas. Prueba con:\n\nEstudiante: estudiante@safiro.com\nProfesor: profesor@safiro.com\nContraseña: demo123'
-        );
+      let errorMessage = 'Ocurrió un error al iniciar sesión';
+
+      if (error.response) {
+        // El servidor respondió con un error
+        if (error.response.status === 404) {
+          errorMessage = 'Usuario no encontrado. Verifica tu correo electrónico.';
+        } else if (error.response.status === 401) {
+          errorMessage = 'Credenciales incorrectas.';
+        } else if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+      } else if (error.request) {
+        // No hubo respuesta del servidor
+        errorMessage = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
+      } else if (error.message) {
+        errorMessage = error.message;
       }
-    } catch (error) {
-      Alert.alert('Error', 'Ocurrió un error al iniciar sesión');
+
+      Alert.alert('Error de autenticación', errorMessage);
     } finally {
       setLoading(false);
     }
