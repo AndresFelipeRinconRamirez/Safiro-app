@@ -22,10 +22,10 @@ const getApiUrl = () => {
   // return 'http://10.0.2.2:8080/api/v1';
 
   // Opción 2: Para web o iOS Simulator
-  return 'http://localhost:8080/api/v1';
+  // return 'http://localhost:8080/api/v1';
 
-  // Opción 3: Para dispositivo físico - reemplaza con tu IP local
-  // return 'http://192.168.1.X:8080/api/v1';
+  // Opción 3: Para dispositivo físico - IP local detectada
+  return 'http://192.168.1.6:8080/api/v1';
 };
 
 export const API_BASE_URL = getApiUrl();
